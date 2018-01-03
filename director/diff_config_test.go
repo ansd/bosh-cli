@@ -51,6 +51,22 @@ var _ bool = Describe("Director", func() {
 			Expect(diff).To(Equal(expectedDiffResponse))
 		})
 
+		Context("when director returns 440012 Config not found error", func() {
+			It("returns the director error description", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/configs/diff"),
+						ghttp.RespondWith(http.StatusNotFound, `{"code": 440012, "description": "Config with ID '2' not found."}`),
+					),
+				)
+
+				_, err := director.DiffConfigByID("1", "2")
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal(
+					"Config with ID '2' not found."))
+			})
+		})
+
 		It("returns error if response in non-200", func() {
 			AppendBadRequest(ghttp.VerifyRequest("POST", "/configs/diff"), server)
 
